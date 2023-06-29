@@ -5,7 +5,24 @@
 using namespace std;
 
 int* CamadaFisicaTransmissoraCodificacaoBinaria(int quadro[]) {
-    // Implementação da codificação binária
+    /* A função sizeof retorna o tamanho em bytes de uma expressao.
+    Neste caso, ele divide o tamanho total pelo tamanho de um elemento,
+    obtendo o número de elementos presentes no quadro.
+    */
+    int tamanhoQuadro = sizeof(quadro) / sizeof(quadro[0]);
+
+    int* fluxoBrutoDeBits = new int[tamanhoQuadro * 8]; // *8 pois transforma de byte pra bit.
+
+    for (int i = 0; i < tamanhoQuadro; i++) {
+        int valor = quadro[i];
+
+        for (int j = 7; j >= 0; j--) {
+            fluxoBrutoDeBits[i * 8 + j] = valor % 2;
+            valor /= 2;
+        }
+    }
+
+    return fluxoBrutoDeBits;
 }
 
 int* CamadaFisicaTransmissoraCodificacaoManchester(int quadro[]) {
@@ -20,6 +37,7 @@ void CamadaFisicaTransmissora(int quadro[]) {
     int tipoDeCodificacao = 0;
     int* fluxoBrutoDeBits;
 
+    // Armazena o valor de retorno conforme a Codificação
     switch (tipoDeCodificacao) {
         case 0:
             fluxoBrutoDeBits = CamadaFisicaTransmissoraCodificacaoBinaria(quadro);
@@ -31,7 +49,7 @@ void CamadaFisicaTransmissora(int quadro[]) {
             CamadaFisicaTransmissoraCodificacaoBipolar(quadro);
             break;
     }
-    // Implementação do meio de comunicação
+    MeioDeComunicacao(fluxoBrutoDeBits);
 }
 
 int* CamadaFisicaReceptoraDecodificacaoBinaria(int quadro[]) {
