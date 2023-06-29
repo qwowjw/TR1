@@ -17,6 +17,7 @@ int main() {
 }
 
 void AplicacaoTransmissora() {
+    // Recebe a mensagem
     string mensagem;
     cout << "Digite uma mensagem: " << endl;
     cin >> mensagem;
@@ -25,7 +26,15 @@ void AplicacaoTransmissora() {
 }
 
 void CamadaDeAplicacaoTransmissora(string mensagem) {
-    CamadaFisicaTransmissora((int*)mensagem.c_str());
+    int tamanhoMensagem = mensagem.length();
+
+    // Conversão da mensagem para um array de inteiros
+    // Os caracteres das palavras são representados por inteiros que correspodem ao seus códigos ASCII
+    int* quadro = new int[tamanhoMensagem];
+    for (int i = 0; i < tamanhoMensagem; i++) {
+        quadro[i] = mensagem[i];
+    }
+    CamadaFisicaTransmissora(quadro);
 }
 
 void CamadaDeAplicacaoReceptora(int quadro[]) {
