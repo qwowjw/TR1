@@ -14,11 +14,11 @@ int* CamadaFisicaTransmissoraCodificacaoBinaria(int quadro[]) {
     int* fluxoBrutoDeBits = new int[tamanhoQuadro * 8]; // *8 pois transforma de byte pra bit.
 
     for (int i = 0; i < tamanhoQuadro; i++) {
-        int valor = quadro[i];
+        int valor = quadro[i]; // Itera cada elemento do quadro.
 
-        for (int j = 7; j >= 0; j--) {
-            fluxoBrutoDeBits[i * 8 + j] = valor % 2;
-            valor /= 2;
+        for (int j = 7; j >= 0; j--) { // De 7 a 0 representando 8 bits.
+            fluxoBrutoDeBits[i * 8 + j] = valor % 2; // Extraindo o ultimo bit do valor atual
+            valor /= 2; // Deslocando para a direita, descartando o bit mais a direita (já processado)
         }
     }
 
