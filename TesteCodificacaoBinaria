@@ -1,0 +1,115 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+// Declaração das funções utilizadas na camada física
+void AplicacaoTransmissora();
+void CamadaDeAplicacaoTransmissora(string mensagem);
+void CamadaFisicaTransmissora(int quadro[]);
+int* CamadaFisicaTransmissoraCodificacaoBinaria(int quadro[]);
+void MeioDeComunicacao(int fluxoBrutoDeBits[]);
+void CamadaFisicaReceptora(int quadro[]);
+int* CamadaFisicaReceptoraDecodificacaoBinaria(int quadro[]);
+void CamadaDeAplicacaoReceptora(int quadro[]);
+void AplicacaoReceptora(string mensagem);
+
+int main() {
+    AplicacaoTransmissora();
+    return 0;
+}
+
+void AplicacaoTransmissora() {
+    // Recebe a mensagem
+    string mensagem;
+    cout << "Digite uma mensagem: ";
+    getline(cin, mensagem);
+
+    CamadaDeAplicacaoTransmissora(mensagem);
+}
+
+void CamadaDeAplicacaoTransmissora(string mensagem) {
+    int tamanhoMensagem = mensagem.length();
+
+    // Conversão da mensagem para um array de inteiros
+    int* quadro = new int[tamanhoMensagem];
+    for (int i = 0; i < tamanhoMensagem; i++) {
+        quadro[i] = mensagem[i];
+        cout << "letra: " << mensagem[i] << ", quadro: " << quadro[i] << endl;
+    }
+    cout << quadro << endl;
+    cout << endl;
+    CamadaFisicaTransmissora(quadro);
+}
+
+void CamadaFisicaTransmissora(int quadro[]) {
+    int* fluxoBrutoDeBits = CamadaFisicaTransmissoraCodificacaoBinaria(quadro);
+    MeioDeComunicacao(fluxoBrutoDeBits);
+}
+
+int* CamadaFisicaTransmissoraCodificacaoBinaria(int quadro[]) {
+    int tamanhoQuadro = sizeof(quadro) / sizeof(quadro[0]);
+
+    int* fluxoBrutoDeBits = new int[tamanhoQuadro * 8];
+
+    for (int i = 0; i < tamanhoQuadro; i++) {
+        int valor = quadro[i];
+
+        for (int j = 7; j >= 0; j--) {
+            fluxoBrutoDeBits[i * 8 + j] = valor % 2;
+            valor /= 2;
+        }
+    }
+
+    return fluxoBrutoDeBits;
+}
+
+void MeioDeComunicacao(int fluxoBrutoDeBits[]) {
+    // Simulação do meio de comunicação (neste caso, apenas exibindo os bits transmitidos)
+    cout << "Fluxo bruto de bits transmitidos: ";
+    int tamanhoFluxo = sizeof(fluxoBrutoDeBits) / sizeof(fluxoBrutoDeBits[0]);
+    for (int i = 0; i < tamanhoFluxo; i++) {
+        cout << fluxoBrutoDeBits[i];
+    }
+    cout << endl;
+
+    CamadaFisicaReceptora(fluxoBrutoDeBits);
+}
+
+void CamadaFisicaReceptora(int quadro[]) {
+    int* fluxoBrutoDeBits = CamadaFisicaReceptoraDecodificacaoBinaria(quadro);
+    CamadaDeAplicacaoReceptora(fluxoBrutoDeBits);
+}
+
+int* CamadaFisicaReceptoraDecodificacaoBinaria(int quadro[]) {
+    int tamanhoQuadro = sizeof(quadro) / sizeof(quadro[0]);
+
+    int* fluxoBrutoDeBits = new int[tamanhoQuadro * 8];
+
+    for (int i = 0; i < tamanhoQuadro; i++) {
+        int valor = 0;
+
+        for (int j = 0; j < 8; j++) {
+            valor = valor * 2 + quadro[i * 8 + j];
+        }
+
+        fluxoBrutoDeBits[i] = valor;
+    }
+
+    return fluxoBrutoDeBits;
+}
+
+void CamadaDeAplicacaoReceptora(int quadro[]) {
+    int tamanhoQuadro = sizeof(quadro) / sizeof(quadro[0]);
+
+    string mensagem;
+    for (int i = 0; i < tamanhoQuadro; i++) {
+        mensagem += (char)quadro[i];
+    }
+
+    AplicacaoReceptora(mensagem);
+}
+
+void AplicacaoReceptora(string mensagem) {
+    cout << "Mensagem recebida: " << mensagem << endl;
+}
