@@ -22,14 +22,22 @@ void CamadaDeAplicacaoTransmissora(string mensagem)
     int tamanhoMensagem = mensagem.length();
 
     // Conversão da mensagem para um vetor de inteiros
-    vector<int> quadro(tamanhoMensagem);
+    vector<int> quadro;
     for (int i = 0; i < tamanhoMensagem; i++)
     {
-        quadro[i] = mensagem[i];
+        int valorASCII = mensagem[i];
+
+        // Conversão do valor ASCII para representação binária
+        for (int j = 7; j >= 0; j--)
+        {
+            int bit = (valorASCII >> j) & 1; // Operação AND bit a bit entre o resultado do deslocamento à direita e o valor 1. 
+            quadro.push_back(bit);
+        }
     }
     cout << "Mensagem da camada de aplicacao transmissora: " << mensagem << endl;
     CamadaFisicaTransmissora(quadro);
 }
+
 
 void CamadaFisicaTransmissora(const vector<int> &quadro)
 {
@@ -61,100 +69,76 @@ void CamadaFisicaTransmissora(const vector<int> &quadro)
 
 vector<int> CamadaFisicaTransmissoraCodificacaoBinaria(const vector<int> &quadro)
 {
-    int tamanhoQuadro = quadro.size();
-    
-    vector<int> fluxoBrutoDeBits(tamanhoQuadro * 8);
-    for (int i = 0; i < tamanhoQuadro; i++)
-    {
-        int valor = quadro[i];
-
-        for (int j = 7; j >= 0; j--)
-        {
-            fluxoBrutoDeBits[i * 8 + j] = valor % 2;
-            valor /= 2;
-        }
-    }
-    cout << "Mensagem codificada em binario: ";
-    for (int i = 0; i < fluxoBrutoDeBits.size(); i++){
-        cout << fluxoBrutoDeBits[i];
-    }
-    cout << endl;
-    cout << endl;
-    return fluxoBrutoDeBits;
+    return quadro;
 }
 
 vector<int> CamadaFisicaTransmissoraCodificacaoManchester(const vector<int> &quadro)
 {
-    int tamanhoQuadro = quadro.size();
-    vector<int> fluxoBrutoDeBits = CamadaFisicaTransmissoraCodificacaoBinaria(quadro);
 
-    vector<int> fluxonovodebits;
+    vector<int> fluxoBrutoDeBits;
     int bits;
 
-    for (int i = 0; i < fluxoBrutoDeBits.size(); i++)
+    for (int i = 0; i < quadro.size(); i++)
     {
-        switch (fluxoBrutoDeBits[i])
+        switch (quadro[i])
         {
         case 0:
-            fluxonovodebits.push_back(0);
-            fluxonovodebits.push_back(1);
+            fluxoBrutoDeBits.push_back(0);
+            fluxoBrutoDeBits.push_back(1);
             break;
         case 1:
-            fluxonovodebits.push_back(1);
-            fluxonovodebits.push_back(0);
+            fluxoBrutoDeBits.push_back(1);
+            fluxoBrutoDeBits.push_back(0);
             break;
         }
     }
      cout << "Mensagem codificada em Manchester: ";
-    for (int i = 0; i < fluxonovodebits.size(); i++){
-        cout << fluxonovodebits[i];
+    for (int i = 0; i < fluxoBrutoDeBits.size(); i++){
+        cout << fluxoBrutoDeBits[i];
     }
     cout << endl;
-    return fluxonovodebits;
+    return fluxoBrutoDeBits;
 }
 
 vector<int> CamadaFisicaTransmissoraCodificacaoBipolar(const vector<int> &quadro)
 {
-    int tamanhoQuadro = quadro.size();
+
     vector<int> fluxoBrutoDeBits;
-    fluxoBrutoDeBits = CamadaFisicaTransmissoraCodificacaoBinaria(quadro);
-    vector<int> fluxonovodebits;
 
     // Estado inicial para detecção de erro
 
-    int alternado = 0;
-    for (int i = 0; i < fluxoBrutoDeBits.size(); i++)
+    int flat = 0;
+    for (int i = 0; i < quadro.size(); i++)
     {
-        if (fluxoBrutoDeBits[i] == 1)
+        if (quadro[i] == 1)
         {
-            switch (alternado)
+            switch (flat)
             {
             case 0:
-                alternado = 1;
-                fluxonovodebits.push_back(1);
+                flat = 1;
+                fluxoBrutoDeBits.push_back(1);
                 break;
             case 1:
-                alternado -= 1;
-                fluxonovodebits.push_back(-1);
+                flat -= 1;
+                fluxoBrutoDeBits.push_back(-1);
                 break;
             }
         }
         else
         {
-            fluxonovodebits.push_back(0);
+            fluxoBrutoDeBits.push_back(0);
         }
     }
     cout << "Mensagem codificada em bipolar: " ;
-    for (int i = 0; i < fluxonovodebits.size(); i++){
-        cout << fluxonovodebits[i];
+    for (int i = 0; i < fluxoBrutoDeBits.size(); i++){
+        cout << fluxoBrutoDeBits[i];
     }
     cout << endl;
-    return fluxonovodebits;
+    return fluxoBrutoDeBits;
 }
 
 void MeioDeComunicacao(const vector<int> &fluxoBrutoDeBits)
-{
-    // Simulação do meio de comunicação (neste caso, apenas exibindo os bits transmitidos)
+{    
     cout << "Fluxo bruto de bits transmitidos depois do meio de comunicacao: ";
     int tamanhoFluxo = fluxoBrutoDeBits.size();
     for (int i = 0; i < tamanhoFluxo; i++)
@@ -163,7 +147,14 @@ void MeioDeComunicacao(const vector<int> &fluxoBrutoDeBits)
     }
     cout << endl;
 
-    CamadaFisicaReceptora(fluxoBrutoDeBits);
+  vector<int> fluxoBrutoDeBitsA, fluxoBrutoDeBitsB;
+  fluxoBrutoDeBitsA = fluxoBrutoDeBits;
+
+  for (int i = 0; i < fluxoBrutoDeBitsA.size(); i++){
+    fluxoBrutoDeBitsB.push_back(fluxoBrutoDeBitsA[i]);
+  }
+
+    CamadaFisicaReceptora(fluxoBrutoDeBitsB);
 }
 
 void CamadaFisicaReceptora(const vector<int> &quadro){
@@ -189,33 +180,25 @@ void CamadaFisicaReceptora(const vector<int> &quadro){
 
 vector<int> CamadaFisicaReceptoraDecodificacaoBipolar(const vector<int> &quadro)
 {
-    int tamanhoQuadro = quadro.size();
     vector<int> fluxoBrutoDeBits;
-
-    // Estado inicial para detecção de erro
-    int estado = 0;
-
-    vector<int> fluxonovodebits;
 
     for (int i = 0; i < quadro.size(); i++)
     {
         switch (quadro[i])
         {
         case 0:
-            fluxonovodebits.push_back(0);
+            fluxoBrutoDeBits.push_back(0);
             break;
         case 1:
-            fluxonovodebits.push_back(1);
+            fluxoBrutoDeBits.push_back(1);
             break;
         case -1:
-            fluxonovodebits.push_back(1);
+            fluxoBrutoDeBits.push_back(1);
             break;
         }
     }
 
-    vector<int> mensagem;
-    mensagem = CamadaFisicaReceptoraDecodificacaoBinaria(fluxonovodebits);
-    return mensagem;
+    return fluxoBrutoDeBits;
 }
 
 vector<int> CamadaFisicaReceptoraDecodificacaoManchester(const vector<int> &quadro)
@@ -244,51 +227,40 @@ vector<int> CamadaFisicaReceptoraDecodificacaoManchester(const vector<int> &quad
         }
     }
 
-    vector<int> novofluxodebits;
-    novofluxodebits = CamadaFisicaReceptoraDecodificacaoBinaria(fluxoBrutoDeBits);
-    return novofluxodebits;
+    return fluxoBrutoDeBits;
 }
 
 vector<int> CamadaFisicaReceptoraDecodificacaoBinaria(const vector<int> &quadro)
 {
-    int tamanhoQuadro = quadro.size();
-
-    vector<int> fluxoBrutoDeBits(tamanhoQuadro / 8);
-
-    for (int i = 0; i < tamanhoQuadro; i += 8)
-    {
-        int valor = 0;
-
-        for (int j = 7; j >= 0; j--)
-        {
-            if (quadro[i + j] != 0 && quadro[i + j] != 1)
-            {
-                throw runtime_error("Erro na decodificação binária");
-            }
-
-            valor += quadro[i + j] * (1 << (7 - j));
-        }
-
-        fluxoBrutoDeBits[i / 8] = valor;
-    }
-
-    return fluxoBrutoDeBits;
+    return quadro;
 }
 
-void CamadaDeAplicacaoReceptora(const vector<int> &quadro)
+void CamadaDeAplicacaoReceptora(vector<int> quadro)
 {
-    int tamanhoQuadro = quadro.size();
-    //cout << "tamanho do quadro:" << tamanhoQuadro << endl;
-    // Conversão do quadro para uma string
-    string mensagem(tamanhoQuadro, ' ');
+  string mensagem;
 
-    for (int i = 0; i < tamanhoQuadro; i++)
+  // Percorre o vetor quadro em incrementos de 8
+  for (int i = 0; i < quadro.size(); i += 8)
+  {
+    // Inicializa o caractere atual como vazio
+    char c = '\0';
+
+    // Percorre os 8 bits do caractere
+    for (int j = 7; j >= 0; j--)
     {
-        mensagem[i] = quadro[i];
+      // Realiza o deslocamento à esquerda do caractere e faz um OR bit a bit com o bit do quadro
+      c <<= 1;
+      c |= quadro[i + j];
     }
 
-    AplicacaoReceptora(mensagem);
+    // Adiciona o caractere reconstruído à mensagem
+    mensagem.push_back(c);
+  }
+
+  // Chama a função AplicacaoReceptora com a mensagem reconstruída
+  AplicacaoReceptora(mensagem);
 }
+
 void AplicacaoReceptora(const string &mensagem)
 {
     cout << "Mensagem Decodificada: " << mensagem << endl;
