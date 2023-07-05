@@ -1,4 +1,5 @@
 #include <string>
+#include <iostream>
 #include <vector>
 #include <stdexcept>
 #include "CamadaFisica.h"
@@ -21,24 +22,25 @@ void CamadaDeAplicacaoTransmissora(string mensagem)
 {
     int tamanhoMensagem = mensagem.length();
 
-    // Conversão da mensagem para um vetor de inteiros
+    // Conversão da mensagem para um vetor de inteiros representando os bits
     vector<int> quadro;
     for (int i = 0; i < tamanhoMensagem; i++)
-    {
+    {   
+        // Conversão da mensagem para ASCII
         int valorASCII = mensagem[i];
 
-        // Conversão do valor ASCII para representação binária
-        for (int j = 7; j >= 0; j--)
-        {
-            int bit = (valorASCII >> j) & 1; // Operação AND bit a bit entre o resultado do deslocamento à direita e o valor 1. 
+        // Conversão do valor ASCII para representaçáo binária
+        for (int j = 7; j >= 0; j--){   // Percorre do bit mais significativo para o menos
+
+            int bit = (valorASCII >> j) & 1;  // Desloca o valor ASCII para a direita por j bits e realiza uma operação AND bit a bit com 1
             quadro.push_back(bit);
         }
-    }
+    }    
     cout << "Mensagem da camada de aplicacao transmissora: " << mensagem << endl;
     CamadaFisicaTransmissora(quadro);
 }
 
-
+// Camada onde é escolhida a decodificação, recebe a mensagem codificada e transmite ao meio de comunicação
 void CamadaFisicaTransmissora(const vector<int> &quadro)
 {
     cout << "ESCOLHA O TIPO DE CODIFICACAO:" << endl;
@@ -67,14 +69,15 @@ void CamadaFisicaTransmissora(const vector<int> &quadro)
     MeioDeComunicacao(fluxoBrutoDeBits);
 }
 
+// Função da decodificação binária. Obs: É feita e reaproveitada da CamadaDeAplicacaoTransmissora
 vector<int> CamadaFisicaTransmissoraCodificacaoBinaria(const vector<int> &quadro)
 {
     return quadro;
 }
 
+// Função da decodificação Manchester
 vector<int> CamadaFisicaTransmissoraCodificacaoManchester(const vector<int> &quadro)
 {
-
     vector<int> fluxoBrutoDeBits;
     int bits;
 
@@ -100,26 +103,26 @@ vector<int> CamadaFisicaTransmissoraCodificacaoManchester(const vector<int> &qua
     return fluxoBrutoDeBits;
 }
 
+// Função da decodificação Manchester
 vector<int> CamadaFisicaTransmissoraCodificacaoBipolar(const vector<int> &quadro)
 {
-
     vector<int> fluxoBrutoDeBits;
 
-    // Estado inicial para detecção de erro
-
-    int flat = 0;
+    int alternado = 0; // Variável que indicará o sentido do pulso quando o bit for 1 (flag)
     for (int i = 0; i < quadro.size(); i++)
-    {
+    {   
+        // Verifica se o bit é 0 ou 1
         if (quadro[i] == 1)
-        {
-            switch (flat)
+        {   
+            // Verifica se o bit 1 anterior foi 1 ou -1
+            switch (alternado)
             {
             case 0:
-                flat = 1;
+                alternado = 1;
                 fluxoBrutoDeBits.push_back(1);
                 break;
             case 1:
-                flat -= 1;
+                alternado -= 1;
                 fluxoBrutoDeBits.push_back(-1);
                 break;
             }
@@ -231,34 +234,42 @@ vector<int> CamadaFisicaReceptoraDecodificacaoManchester(const vector<int> &quad
 }
 
 vector<int> CamadaFisicaReceptoraDecodificacaoBinaria(const vector<int> &quadro)
-{
+{     
     return quadro;
 }
 
-void CamadaDeAplicacaoReceptora(vector<int> quadro)
+void CamadaDeAplicacaoReceptora(const vector<int> &quadro)
 {
-  string mensagem;
+    int tamanhoQuadro = quadro.size();
 
-  // Percorre o vetor quadro em incrementos de 8
-  for (int i = 0; i < quadro.size(); i += 8)
-  {
-    // Inicializa o caractere atual como vazio
-    char c = '\0';
+    // Decodificação binária
+    vector<int> fluxoBrutoDeBits(tamanhoQuadro / 8);
 
-    // Percorre os 8 bits do caractere
-    for (int j = 7; j >= 0; j--)
+    for (int i = 0; i < tamanhoQuadro; i += 8)
     {
-      // Realiza o deslocamento à esquerda do caractere e faz um OR bit a bit com o bit do quadro
-      c <<= 1;
-      c |= quadro[i + j];
+        int valor = 0;
+
+        // quadro[i + j] representa o bit atual que está sendo considerado no loop. Pode ser 0 ou 1, pois é o resultado da decodificação binária de cada bit do quadro.
+        for (int j = 7; j >= 0; j--)
+        {   
+        // (1 << (7 - j)) é uma operação de deslocamento à esquerda (bitwise left shift). O número 1 é deslocado para a esquerda pela quantidade (7 - j) de vezes
+            valor += quadro[i + j] * (1 << (7 - j));
+        //A expressão quadro[i + j] * (1 << (7 - j)) multiplica o valor do bit (0 ou 1) pelo peso correspondente.
+        //Se o bit for 0, o peso não será adicionado ao valor. Se o bit for 1, o peso será adicionado ao valor.
+        }
+
+        fluxoBrutoDeBits[i / 8] = valor;
     }
 
-    // Adiciona o caractere reconstruído à mensagem
-    mensagem.push_back(c);
-  }
+    string mensagem;
+    mensagem.reserve(fluxoBrutoDeBits.size());  // usada para reservar espaço antecipadamente na memória a fim de evitar realocações frequentes
 
-  // Chama a função AplicacaoReceptora com a mensagem reconstruída
-  AplicacaoReceptora(mensagem);
+    for (int i = 0; i < fluxoBrutoDeBits.size(); i++)
+    {
+        mensagem += static_cast<char>(fluxoBrutoDeBits[i]); // operador de conversão para o tipo char
+    }
+
+    AplicacaoReceptora(mensagem);
 }
 
 void AplicacaoReceptora(const string &mensagem)
