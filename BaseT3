@@ -1,0 +1,96 @@
+#include <iostream>
+
+using namespace std;
+
+
+void CamadaEnlaceDadosTransmissora (int quadro[]){
+
+    CamadaEnlaceDadosTransmissoraEnquadramento(quadro);
+    CamadaEnlaceDadosTransmissoraControleDeErro(quadro);
+}
+
+void CamadaEnlaceDadosTransmissoraEnquadramento (int quadro[]){}
+
+void CamadaEnlaceDadosTransmissoraControleDeErro (int quadro[]){
+    int tipoDeControleDeErro = 0;
+    switch (tipoDeControleDeErro){
+        case 0: //bit de paridade par
+            break;
+        case 1: // CRC
+            break;
+        case 2: //codigo de Hamming
+            break;
+    }
+}
+
+void CamadaEnlaceDadosTransmissora (int quadro[]){}
+
+
+void CamadaEnlaceDadosTransmissoraControleDeErroBitParidadePar (int quadro[]){
+    // implementacao do algoritmo
+}    
+
+
+void CamadaEnlaceDadosTransmissoraControleDeErroCRC(int quadro[]){
+    // implementacao do algoritmo, usar polinomio CRC-32 (IEEE 802)
+}
+
+void CamadaEnlaceDadosTransmissoraControleDeErroCodigoDeHamming(int quadro[]){
+    // implementacao do algoritmo
+}
+
+void MeioDeComunicacao(const vector<int> &fluxoBrutoDeBits)
+{
+    // OBS: trabalhar com BITS e nao com bytes
+    int erro, porcentagemDeErros;
+    int fluxobrutoDeBitsPontoA, fluxobrutoDeBitsPontoB;
+
+    porcentagemDeErros = 0;
+    fluxobrutoDeBitsPontoA = fluxoBrutoDeBits;
+
+    while (fluxobrutoDeBitsPontoB.lenght != fluxobrutoDeBitsPontoA){
+        if ((rand%100)== ...){// fazer a probabilidade do erro
+            fluxobrutoDeBitsPontoB += fluxobrutoDeBitsPontoA; //BITS!
+        }
+        else{ //EERO! INVERTER (usa condicao ternaria)
+            fluxobrutoDeBitsPontoB==0;
+            fluxobrutoDeBitsPontoA = fluxobrutoDeBitsPontoB++;
+            fluxobrutoDeBitsPontoA = fluxobrutoDeBitsPontoB--;
+        }
+
+    }
+}
+
+
+void CamadaEnlaceDadosReceptora (int quadro[]){
+	
+    CamadaEnlaceDadosReceptoraEnquadramento(quadro);
+    CamadaEnlaceDadosReceptoraControleDeErro (quadro);
+    CamadDeAplicacaoReceptora(quadro);
+}
+
+void CamadaEnlaceDadosReceptoraEnquadramento(int quadro[]){}
+void CamadaEnlaceDadosReceptoraControleDeErro (int quadro[]){
+    int tipoDeControleDeErro = 0; //Alterar de acordo com o teste
+    switch (tipoDeControleDeErro){
+        case 0: //bit de paridade par
+            break;
+        case 1: // CRC
+            break;
+        case 2: //codigo de Hamming
+            break;
+    }
+
+}
+void CamadaEnlaceDadosReceptoraControleDeErroBitParidadePar (int quadro[]){
+    // implementacao do algoritmo para VERIFICAR SE HOUVE ERRO
+}    
+
+
+void CamadaEnlaceDadosReceptoraControleDeErroCRC(int quadro[]){
+    // implementacao do algoritmo para VERIFICAR SE HOUVE ERRO, usar polinomio CRC-32 (IEEE 802)
+}
+
+void CamadaEnlaceDadosReceptoraControleDeErroCodigoDeHamming(int quadro[]){
+    // implementacao do algoritmo para VERIFICAR SE HOUVE ERRO
+}
