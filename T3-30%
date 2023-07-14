@@ -1,0 +1,503 @@
+#include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+int TipoDeCodificacao;
+
+void AplicacaoTransmissora()
+{  
+    // Recebe a mensagem
+    string mensagem;
+    cout << "Digite uma mensagem: ";
+    getline(cin, mensagem);
+
+    CamadaDeAplicacaoTransmissora(mensagem);
+}
+
+void CamadaDeAplicacaoTransmissora(string mensagem)
+{
+    int tamanhoMensagem = mensagem.length();
+
+    // Conversão da mensagem para um vetor de inteiros
+    vector<int> quadro(tamanhoMensagem);
+    for (int i = 0; i < tamanhoMensagem; i++)
+    {
+        quadro[i] = mensagem[i];
+    }
+    cout << "Mensagem da camada de aplicacao transmissora: " << mensagem << endl;
+    CamadaEnlaceDadosTransmissora(quadro);
+}
+
+void CamadaEnlaceDadosTransmissora(const vector<int>& quadro) {
+    vector<int> quadroEnquadrado;
+    quadroEnquadrado = CamadaEnlaceDadosTransmissoraEnquadramento(quadro);
+    vector<int> quadroComControleErro;
+    quadroComControleErro = CamadaEnlaceDadosTransmissoraControleDeErro(quadroEnquadrado);
+
+    CamadaFisicaTransmissora(quadroComControleErro);
+}
+
+void CamadaEnlaceDadosTransmissoraEnquadramento (const vector<int>& quadro){
+    int tipoEnquadramento;
+    cout << "Escolha o tipo de enquadramento: " << endl;
+    cout << "(0) Contagem de caracteres" << endl;
+    cout << "(1) Insercao de bytes" << endl;
+    cin >> tipoEnquadramento;
+
+    vector<int> quadroEnquadrado;
+    switch (tipoEnquadramento) {
+        case 0:
+            quadroEnquadrado = enquadramentoContagemCaracteres(quadro); // ta dando erro pq um é vetor de inteiro, e o outro eh vetor de string
+            break;
+        case 1:
+            quadroEnquadrado = enquadramentoInsercaoBytes(quadro);
+            break;
+        default:
+            throw runtime_error("Tipo de enquadramento inválido");
+    }
+
+}
+
+// Protocolo de enquadramento de dados - Contagem de caracteres
+vector<string> enquadramentoContagemCaracteres(const vector<int>& quadro) {
+    vector<string> pacotes;
+    string pacote;
+
+    for (int i = 0; i < quadro.size(); i++) {
+        pacote += to_string(quadro[i]);
+
+        if (pacote.size() == 8) {
+            pacotes.push_back(pacote);
+            pacote.clear();
+        }
+    }
+
+    if (!pacote.empty()) {
+        pacotes.push_back(pacote);
+    }
+
+    return pacotes;
+}
+
+// Protocolo de enquadramento de dados - Inserção de bytes/caracteres
+vector<string> enquadramentoInsercaoBytes(const vector<int>& quadro) {
+    vector<string> pacotes;
+    string pacote;
+
+    for (int i = 0; i < quadro.size(); i++) {
+        pacote += to_string(quadro[i]);
+
+        if (pacote.size() == 4) {
+            pacotes.push_back(pacote);
+            pacote.clear();
+        }
+    }
+
+    if (!pacote.empty()) {
+        pacotes.push_back(pacote);
+    }
+
+    return pacotes;
+}
+
+void CamadaEnlaceDadosTransmissoraControleDeErro (const vector<int>& quadro){
+    int tipoControleErro;
+    cout << "Escolha o tipo de controle de erro: " << endl;
+    cout << "(0) Bit de paridade par" << endl;
+    cout << "(1) CRC" << endl;
+    cout << "(2) Código de Hamming" << endl;
+    cin >> tipoControleErro;
+
+    vector<int> quadroComControleErro;
+
+    switch (tipoControleErro) {
+        case 0:
+            quadroComControleErro = CamadaEnlaceDadosTransmissoraControleDeErroBitParidadePar(quadro);
+            break;
+        case 1:
+            quadroComControleErro = CamadaEnlaceDadosTransmissoraControleDeErroCRC(quadro);
+            break;
+        case 2:
+            quadroComControleErro = correcaoCodigoHamming(quadro);
+            break;
+        default:
+            throw runtime_error("Tipo de controle de erro inválido");
+    }
+}
+
+// Protocolo de verificação de erros - Bit de paridade par
+bool CamadaEnlaceDadosTransmissoraControleDeErroBitParidadePar(const vector<int>& quadro, int bitParidade) {
+    int paridade = 0; 
+    for (int i = 0; i < quadro.size(); i++) {
+        paridade ^= quadro[i];
+    }
+    return (paridade == bitParidade); // detecta erro de apenas um unico bit
+}
+
+// Protocolo de verificação de erros - CRC (Cyclic Redundancy Check)
+bool CamadaEnlaceDadosTransmissoraControleDeErroCRC(const vector<int>& quadro, int crc) {
+    // Implementação da verificação CRC usando o polinômio CRC-32 (IEEE 802)
+    // Consulte bibliotecas ou algoritmos específicos de CRC para uma implementação mais robusta
+    int polinomio = 0x04C11DB7;
+    int crcCalculado = 0xFFFFFFFF;
+
+    for (int i = 0; i < quadro.size(); i++) {
+        crcCalculado ^= (quadro[i] << 24);
+        for (int j = 0; j < 8; j++) {
+            if (crcCalculado & 0x80000000) {
+                crcCalculado = (crcCalculado << 1) ^ polinomio;
+            } else {
+                crcCalculado <<= 1;
+            }
+        }
+    }
+
+    return (crcCalculado == crc);
+}
+
+// Protocolo de correção de erros - Hamming
+vector<int> correcaoCodigoHamming(const vector<int>& quadro) {
+    // Implementação do algoritmo de Hamming para corrigir erros
+    // Consulte bibliotecas ou algoritmos específicos de Hamming para uma implementação mais robusta
+    vector<int> quadro_corrigido = quadro;  // Simulação da correção
+    return quadro_corrigido;
+}
+
+
+
+void CamadaEnlaceDadosReceptora(const vector<string>& pacotes, int tipoDeControleDeErro, int bitParidade, int crc) {
+    vector<int> quadro;
+
+    // Protocolo de desenquadramento de dados
+    // Escolha um dos protocolos de desenquadramento abaixo ou implemente outro de sua preferência
+    //quadro = desenquadramento_contagem_caracteres(pacotes);
+    //quadro = desenquadramento_remocao_bytes(pacotes);
+
+    // Protocolo de verificação de erros
+    bool erro = false;
+    switch (tipoDeControleDeErro) {
+        case 0:  // Bit de paridade par
+            erro = !verificar_bit_paridade_par(quadro, bitParidade);
+            break;
+        case 1:  // CRC
+            erro = !verificar_crc(quadro, crc);
+            break;
+        case 2:  // Código de Hamming
+            quadro = corrigir_hamming(quadro);
+            // Verificar se ocorreram erros após a correção
+            // erro = ...;
+            break;
+    }
+
+    // Trate o quadro recebido, verificando se ocorreram erros
+    if (!erro) {
+        // Quadro recebido corretamente
+        // ...
+    } else {
+        // Erro no quadro recebido
+        // ...
+    }
+}
+
+void MeioDeComunicacao(const vector<int>& fluxoBrutoDeBits) {
+    vector<int> fluxoBrutoDeBitsPontoA = fluxoBrutoDeBits;
+    vector<int> fluxoBrutoDeBitsPontoB;
+
+    for (int i = 0; i < fluxoBrutoDeBitsPontoA.size(); i++) {
+        if ((rand() % 100) == 0) {
+            fluxoBrutoDeBitsPontoB.push_back(fluxoBrutoDeBitsPontoA[i]);
+        } else {
+            // Simulação de erro: inverter um bit aleatório
+            fluxoBrutoDeBitsPontoB.push_back(1 - fluxoBrutoDeBitsPontoA[i]);
+        }
+    }
+
+    vector<string> pacotes;
+    // Receba os pacotes do meio de comunicação
+    // ...
+
+    int tipoDeControleDeErro = 0;
+    int bitParidade = 0;
+    int crc = 0;
+
+    // Receba as informações de controle de erro do meio de comunicação
+    // ...
+
+    CamadaEnlaceDadosReceptora(pacotes, tipoDeControleDeErro, bitParidade, crc);
+}
+
+int TipoDeCodificacao;
+
+
+
+void CamadaFisicaTransmissora(const vector<int> &quadro)
+{
+    cout << "ESCOLHA O TIPO DE CODIFICACAO:" << endl;
+    cout << "(0) - BINARIA" << endl;
+    cout << "(1) - MANCHESTER" <<  endl;
+    cout << "(2) - BIPOLAR" << endl;
+
+    
+    cin >> TipoDeCodificacao;
+
+    vector<int> fluxoBrutoDeBits;
+    switch (TipoDeCodificacao)
+    {
+    case 0:
+        fluxoBrutoDeBits = CamadaFisicaTransmissoraCodificacaoBinaria(quadro);
+        break;
+    case 1:
+        fluxoBrutoDeBits = CamadaFisicaTransmissoraCodificacaoManchester(quadro);
+        break;
+    case 2:
+        fluxoBrutoDeBits = CamadaFisicaTransmissoraCodificacaoBipolar(quadro);
+        break;
+    default:
+        throw runtime_error("Tipo de codificação inválido");
+    }
+    MeioDeComunicacao(fluxoBrutoDeBits);
+}
+
+vector<int> CamadaFisicaTransmissoraCodificacaoBinaria(const vector<int> &quadro)
+{
+    int tamanhoQuadro = quadro.size();
+    
+    vector<int> fluxoBrutoDeBits(tamanhoQuadro * 8);
+    for (int i = 0; i < tamanhoQuadro; i++)
+    {
+        int valor = quadro[i];
+
+        for (int j = 7; j >= 0; j--)
+        {
+            fluxoBrutoDeBits[i * 8 + j] = valor % 2;
+            valor /= 2;
+        }
+    }
+    cout << "Mensagem codificada em binario: ";
+    for (int i = 0; i < fluxoBrutoDeBits.size(); i++){
+        cout << fluxoBrutoDeBits[i];
+    }
+    cout << endl;
+    cout << endl;
+    return fluxoBrutoDeBits;
+}
+
+vector<int> CamadaFisicaTransmissoraCodificacaoManchester(const vector<int> &quadro)
+{
+    int tamanhoQuadro = quadro.size();
+    vector<int> fluxoBrutoDeBits = CamadaFisicaTransmissoraCodificacaoBinaria(quadro);
+
+    vector<int> fluxonovodebits;
+    int bits;
+
+    for (int i = 0; i < fluxoBrutoDeBits.size(); i++)
+    {
+        switch (fluxoBrutoDeBits[i])
+        {
+        case 0:
+            fluxonovodebits.push_back(0);
+            fluxonovodebits.push_back(1);
+            break;
+        case 1:
+            fluxonovodebits.push_back(1);
+            fluxonovodebits.push_back(0);
+            break;
+        }
+    }
+     cout << "Mensagem codificada em Manchester: ";
+    for (int i = 0; i < fluxonovodebits.size(); i++){
+        cout << fluxonovodebits[i];
+    }
+    return fluxonovodebits;
+}
+
+vector<int> CamadaFisicaTransmissoraCodificacaoBipolar(const vector<int> &quadro)
+{
+    int tamanhoQuadro = quadro.size();
+    vector<int> fluxoBrutoDeBits;
+    fluxoBrutoDeBits = CamadaFisicaTransmissoraCodificacaoBinaria(quadro);
+    vector<int> fluxonovodebits;
+
+    // Estado inicial para detecção de erro
+
+    int alternado = 0;
+    for (int i = 0; i < fluxoBrutoDeBits.size(); i++)
+    {
+        if (fluxoBrutoDeBits[i] == 1)
+        {
+            switch (alternado)
+            {
+            case 0:
+                alternado = 1;
+                fluxonovodebits.push_back(1);
+                break;
+            case 1:
+                alternado -= 1;
+                fluxonovodebits.push_back(-1);
+                break;
+            }
+        }
+        else
+        {
+            fluxonovodebits.push_back(0);
+        }
+    }
+    cout << "Mensagem codificada em bipolar: " ;
+    for (int i = 0; i < fluxonovodebits.size(); i++){
+        cout << fluxonovodebits[i];
+    }
+    cout << endl;
+    return fluxonovodebits;
+}
+
+void MeioDeComunicacao(const vector<int> &fluxoBrutoDeBits)
+{
+    // Simulação do meio de comunicação (neste caso, apenas exibindo os bits transmitidos)
+    cout << "Fluxo bruto de bits transmitidos depois do meio de comunicacao: ";
+    int tamanhoFluxo = fluxoBrutoDeBits.size();
+    for (int i = 0; i < tamanhoFluxo; i++)
+    {
+        cout << fluxoBrutoDeBits[i];
+    }
+    cout << endl;
+
+    CamadaFisicaReceptora(fluxoBrutoDeBits);
+}
+
+void CamadaFisicaReceptora(const vector<int> &quadro){
+    
+    vector<int> fluxoBrutoDeBits;
+    switch (TipoDeCodificacao)
+    {
+    case 0:
+        fluxoBrutoDeBits = CamadaFisicaReceptoraDecodificacaoBinaria(quadro);
+        break;
+    case 1:
+        fluxoBrutoDeBits = CamadaFisicaReceptoraDecodificacaoManchester(quadro);
+        break;
+    case 2:
+        fluxoBrutoDeBits = CamadaFisicaReceptoraDecodificacaoBipolar(quadro);
+        break;
+    default:
+        throw runtime_error("Tipo de codificação inválido");
+    }
+
+    CamadaDeAplicacaoReceptora(fluxoBrutoDeBits);
+};
+
+vector<int> CamadaFisicaReceptoraDecodificacaoBipolar(const vector<int> &quadro)
+{
+    int tamanhoQuadro = quadro.size();
+    vector<int> fluxoBrutoDeBits;
+
+    // Estado inicial para detecção de erro
+    int estado = 0;
+
+    vector<int> fluxonovodebits;
+
+    for (int i = 0; i < quadro.size(); i++)
+    {
+        switch (quadro[i])
+        {
+        case 0:
+            fluxonovodebits.push_back(0);
+            break;
+        case 1:
+            fluxonovodebits.push_back(1);
+            break;
+        case -1:
+            fluxonovodebits.push_back(1);
+            break;
+        }
+    }
+
+    vector<int> mensagem;
+    mensagem = CamadaFisicaReceptoraDecodificacaoBinaria(fluxonovodebits);
+    return mensagem;
+}
+
+vector<int> CamadaFisicaReceptoraDecodificacaoManchester(const vector<int> &quadro)
+{
+    int tamanhoQuadro = quadro.size();
+
+    vector<int> fluxoBrutoDeBits(tamanhoQuadro / 2);
+
+    for (int i = 0; i < tamanhoQuadro; i += 2)
+    {
+        int bit1 = quadro[i];
+        int bit2 = quadro[i + 1];
+
+        // Decodificação Manchester
+        if (bit1 == 0 && bit2 == 1)
+        {
+            fluxoBrutoDeBits[i / 2] = 0;
+        }
+        else if (bit1 == 1 && bit2 == 0)
+        {
+            fluxoBrutoDeBits[i / 2] = 1;
+        }
+        else
+        {
+            throw runtime_error("Erro na decodificação Manchester");
+        }
+    }
+
+    vector<int> novofluxodebits;
+    novofluxodebits = CamadaFisicaReceptoraDecodificacaoBinaria(fluxoBrutoDeBits);
+    return novofluxodebits;
+}
+
+vector<int> CamadaFisicaReceptoraDecodificacaoBinaria(const vector<int> &quadro)
+{
+    int tamanhoQuadro = quadro.size();
+
+    vector<int> fluxoBrutoDeBits(tamanhoQuadro / 8);
+
+    for (int i = 0; i < tamanhoQuadro; i += 8)
+    {
+        int valor = 0;
+
+        for (int j = 7; j >= 0; j--)
+        {
+            if (quadro[i + j] != 0 && quadro[i + j] != 1)
+            {
+                throw runtime_error("Erro na decodificação binária");
+            }
+
+            valor += quadro[i + j] * (1 << (7 - j));
+        }
+
+        fluxoBrutoDeBits[i / 8] = valor;
+    }
+
+    return fluxoBrutoDeBits;
+}
+
+void CamadaDeAplicacaoReceptora(const vector<int> &quadro)
+{
+    int tamanhoQuadro = quadro.size();
+    //cout << "tamanho do quadro:" << tamanhoQuadro << endl;
+    // Conversão do quadro para uma string
+    string mensagem(tamanhoQuadro, ' ');
+
+    for (int i = 0; i < tamanhoQuadro; i++)
+    {
+        mensagem[i] = quadro[i];
+    }
+
+    AplicacaoReceptora(mensagem);
+}
+void AplicacaoReceptora(const string &mensagem)
+{
+    cout << "Mensagem Decodificada: " << mensagem << endl;
+}
+
+int main() {
+    vector<int> fluxoBrutoDeBits = {1, 0, 1, 0, 1, 0, 1, 0};
+
+    CamadaEnlaceDadosTransmissora(fluxoBrutoDeBits);
+
+    return 0;
+}
